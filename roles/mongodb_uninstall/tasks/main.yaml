@@ -1,0 +1,66 @@
+---
+
+- name: disable MongoDB service
+  systemd:
+    name: mongod
+    enabled: false
+  tags: mongodb  
+
+- name: Make sure MongoDB service is stopped
+  systemd:
+    state: stopped
+    name: mongod
+  tags: mongodb  
+
+- name: main | uninstall MongoDB packages
+  yum: >
+    pkg={{ item }}
+    state=absent
+  with_items:
+    - mongodb-org*
+  when: ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "7" 
+  tags: mongodb
+
+- name: main | uninstall MongoDB packages
+  dnf: >
+    pkg={{ item }}
+    state=absent
+  with_items:
+    - mongodb-org*
+  when: (ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "8") or (ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "9") 
+  tags: mongodb  
+
+- name: Remove MongoDB log files and directory
+  file:
+    path: /var/log/mongodb
+    state: absent
+  tags: mongodb  
+
+- name: Remove MongoDB Database directory
+  file:
+    path: /var/lib/mongo
+    state: absent
+  tags: mongodb  
+
+- name: Remove MongoDb repository
+  file:
+    path: /etc/yum.repos.d/mongodb-org.repo
+    state: absent
+  tags: mongodb
+
+- name: Refresh repository on Centos7
+  command: yum makecache fast
+  when: ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "7" 
+  tags: mongodb
+
+- name: Refresh repository
+  command: dnf makecache --refresh
+  when: (ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "8") or (ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "9")
+  tags: mongodb
+
+- name: removing firewall rules for 27017/tcp MongoDB
+  command: firewall-cmd --remove-port=27017/tcp --permanent
+  notify: Reloading firewalld rules
+  tags: mongodb  
+
+

@@ -1,0 +1,7 @@
+- name: Terminate running MongoDB, Tomcat and remove all files
+  hosts: db-servers
+  remote_user: root
+  roles:
+    - mongodb_uninstall
+    - disable-thp_uninstall
+

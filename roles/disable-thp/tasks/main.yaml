@@ -1,0 +1,58 @@
+- name: Disabling Transparent Huge Pages to Improve Performance
+  copy:
+    src: disable-thp.service
+    dest: /etc/systemd/system/disable-thp.service
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+  tags: mongodb
+
+
+- name: systemd daemon reload
+  systemd: daemon_reload=yes
+  tags: mongodb
+
+- name: Enable disable-thp at boot and start
+  systemd:
+    name: disable-thp.service
+    state: started
+    enabled: True
+  tags: mongodb
+
+- name: Install tuned package
+  package:
+    name: tuned
+    state: present
+  tags: mongodb
+
+
+- name: Create a directory if it does not exist no-thp into /etc/tuned
+  file:
+    path: /etc/tuned/no-thp
+    state: directory
+    mode: '0755'
+  tags: mongodb
+
+- name: Recursively change ownership of a directory
+  file:
+    path: /etc/tuned/no-thp
+    state: directory
+    recurse: yes
+    owner: root
+    group: root
+  tags: mongodb
+
+
+- name: Copy tuned.conf into /etc/tuned/no-thp/tuned.conf
+  copy:
+    src: tuned.conf
+    dest: /etc/tuned/no-thp/tuned.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+  tags: mongodb
+
+
+- name: Enable profile no-thp
+  command: tuned-adm profile no-thp
+  tags: mongodb

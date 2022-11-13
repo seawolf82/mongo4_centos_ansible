@@ -1,0 +1,12 @@
+
+- hosts: all
+  remote_user: root
+  roles:
+    - common
+
+- hosts: db-servers
+  remote_user: root
+  roles:
+    - mongodb
+	- disable-thp
+

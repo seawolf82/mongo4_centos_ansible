@@ -1,0 +1,25 @@
+---
+
+- name: Disable service disable-thp at boot and stop
+  systemd:
+    name: disable-thp.service
+    state: stopped
+    enabled: False
+  tags: mongodb
+
+- name: Remove Transparent Huge Pages to Improve Performance from /etc/systemd/system
+  file:
+    path: /etc/systemd/system/disable-thp.service
+    state: absent
+  tags: mongodb
+
+- name: systemd daemon reload
+  systemd: daemon_reload=yes
+  tags: mongodb
+
+- name: Remove a directory no-thp from /etc/tuned
+  file:
+    path: /etc/tuned/no-thp
+    state: absent
+  tags: mongodb
+

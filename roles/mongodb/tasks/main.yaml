@@ -1,0 +1,72 @@
+---
+
+- name: Copy mongodb repository into /etc/yum.repos.d for EL7-EL8
+  copy:
+    src: mongodb-org.repo
+    dest: /etc/yum.repos.d/mongodb-org.repo
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+  when: (ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "7") or (ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "8")
+  tags: mongodb
+
+
+- name: Copy mongodb repository into /etc/yum.repos.d for EL9
+  copy:
+    src: mongodb-org-EL9.repo
+    dest: /etc/yum.repos.d/mongodb-org.repo
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+  when: (ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] == "9")
+  tags: mongodb
+
+
+
+- name: ensure a list of MongoDB packages installed
+  yum:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - mongodb-org
+    - mongodb-org-server
+    - mongodb-org-mongos
+    - mongodb-org-shell
+    - mongodb-org-tools
+  tags: mongodb
+
+
+- name: enable MongoDB service
+  systemd:
+    name: mongod
+    enabled: yes
+  tags: mongodb
+
+
+- name: Make sure MongoDB service is running
+  systemd:
+    state: started
+    name: mongod
+  tags: mongodb
+
+
+- name: adding firewall rules for 27017/tcp MongoDB
+  command: firewall-cmd --add-port=27017/tcp --permanent
+  notify: Reloading firewalld rules
+  tags: mongodb
+
+- name: Copy mongod.conf in /etc
+  copy:
+    src: mongod.conf
+    dest: /etc/mongod.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+  tags: mongodb
+
+- name: Restart MongoDB service
+  systemd:
+    state: restarted
+    name: mongod
+  tags: mongodb
+
