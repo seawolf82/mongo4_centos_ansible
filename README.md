@@ -31,7 +31,6 @@ upgrade
 package
 ntp
 mongodb
-tomcat
 
 
 For example, to launch only task regarding upgrade os, run:
